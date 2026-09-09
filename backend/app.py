@@ -16,7 +16,7 @@ from typing import Any
 from fastapi import Depends, FastAPI, File, Form, HTTPException, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -177,12 +177,29 @@ class CourseIn(BaseModel):
     semester: str | None = Field(default=None, max_length=30)
 
 
+def normalize_due_at(value: str | None) -> str | None:
+    if value is None:
+        return None
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError as error:
+        raise ValueError("due_at 必须是 ISO 8601 日期或时间") from error
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc).isoformat()
+
+
 class TaskIn(BaseModel):
     title: str = Field(min_length=1, max_length=200)
     course_id: int
     due_at: str | None = None
     priority: str = Field(default="medium", pattern="^(low|medium|high)$")
     note: str | None = Field(default=None, max_length=1000)
+
+    @field_validator("due_at")
+    @classmethod
+    def validate_due_at(cls, value: str | None) -> str | None:
+        return normalize_due_at(value)
 
 
 class TaskPatch(BaseModel):
@@ -191,6 +208,11 @@ class TaskPatch(BaseModel):
     priority: str | None = Field(default=None, pattern="^(low|medium|high)$")
     note: str | None = Field(default=None, max_length=1000)
     status: str | None = Field(default=None, pattern="^(todo|doing|done)$")
+
+    @field_validator("due_at")
+    @classmethod
+    def validate_due_at(cls, value: str | None) -> str | None:
+        return normalize_due_at(value)
 
 
 class MessageIn(BaseModel):
