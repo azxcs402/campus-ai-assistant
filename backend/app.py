@@ -294,6 +294,32 @@ def create_task(payload: TaskIn, user: sqlite3.Row = Depends(current_user)) -> d
     return dict(row)
 
 
+@app.get("/api/v1/tasks/upcoming")
+def upcoming_tasks(user: sqlite3.Row = Depends(current_user)) -> list[dict[str, Any]]:
+    cutoff = datetime.now(timezone.utc) + timedelta(days=7)
+    with db() as connection:
+        rows = connection.execute(
+            """SELECT t.*, c.name AS course_name FROM tasks t
+               JOIN courses c ON c.id = t.course_id
+               JOIN course_members cm ON cm.course_id = t.course_id AND cm.user_id = ?
+               WHERE t.created_by = ? AND t.status != 'done' AND t.due_at IS NOT NULL
+               ORDER BY t.due_at ASC""",
+            (user["id"], user["id"]),
+        ).fetchall()
+    result = []
+    for row in rows:
+        try:
+            due = datetime.fromisoformat(row["due_at"].replace("Z", "+00:00"))
+        except ValueError:
+            continue
+        if due <= cutoff:
+            item = dict(row)
+            item["remaining_hours"] = round((due - datetime.now(timezone.utc)).total_seconds() / 3600, 1)
+            item["urgent"] = item["remaining_hours"] <= 24
+            result.append(item)
+    return result
+
+
 @app.patch("/api/v1/tasks/{task_id}")
 def update_task(task_id: int, payload: TaskPatch, user: sqlite3.Row = Depends(current_user)) -> dict[str, Any]:
     updates = payload.model_dump(exclude_unset=True)

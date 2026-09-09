@@ -21,12 +21,12 @@ function showApp(user) {
 
 async function loadData() {
   try {
-    const [courses, tasks, overview, conversations] = await Promise.all([request('/courses'), request('/tasks'), request('/stats/overview'), request('/conversations')]);
+    const [courses, tasks, upcoming, overview, conversations] = await Promise.all([request('/courses'), request('/tasks'), request('/tasks/upcoming'), request('/stats/overview'), request('/conversations')]);
     if (!courses.length) await request('/courses', { method: 'POST', body: JSON.stringify({ name: '系统设计与实践', semester: '2026 秋' }) });
     const freshCourses = courses.length ? courses : await request('/courses');
     $('courseSelect').innerHTML = freshCourses.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
     $('materialCourseSelect').innerHTML = freshCourses.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-    renderTasks(tasks); renderStats(overview);
+    renderTasks(tasks); renderUpcoming(upcoming); renderStats(overview);
     renderMaterials(await request(`/courses/${freshCourses[0].id}/materials`));
     if (conversations.length) conversationId = conversations[0].id; else conversationId = (await request('/conversations', { method: 'POST' })).id;
     renderChat(await request(`/conversations/${conversationId}/messages`));
@@ -38,6 +38,9 @@ function renderTasks(tasks) {
   $('taskList').innerHTML = tasks.length ? tasks.map(task => `<article class="task ${task.status === 'done' ? 'completed' : ''}"><div><strong>${escapeHtml(task.title)}</strong><small>${task.due_at ? `截止 ${task.due_at}` : '无截止日期'} · ${task.priority} · ${task.course_name || ''}</small></div><div class="task-actions"><button data-id="${task.id}" data-status="${task.status === 'done' ? 'todo' : 'done'}">${task.status === 'done' ? '恢复' : '完成'}</button><button class="danger" data-delete="${task.id}">删除</button></div></article>`).join('') : '<p class="empty">还没有任务，添加第一个学习任务吧。</p>';
   document.querySelectorAll('[data-id]').forEach(button => button.onclick = async () => { await request(`/tasks/${button.dataset.id}`, { method: 'PATCH', body: JSON.stringify({ status: button.dataset.status }) }); loadData(); });
   document.querySelectorAll('[data-delete]').forEach(button => button.onclick = async () => { if (confirm('确认删除这个任务吗？')) { await request(`/tasks/${button.dataset.delete}`, { method: 'DELETE' }); loadData(); } });
+}
+function renderUpcoming(tasks) {
+  $('upcomingList').innerHTML = tasks.length ? `<div class="upcoming-title">即将截止</div>${tasks.slice(0, 3).map(task => `<div class="upcoming-item ${task.urgent ? 'urgent' : ''}"><span>${escapeHtml(task.title)}</span><small>${task.remaining_hours <= 0 ? '已逾期' : `${task.remaining_hours} 小时内`}</small></div>`).join('')}` : '';
 }
 function renderMaterials(materials) {
   $('materialList').innerHTML = materials.length ? materials.map(material => `<article class="task"><div><strong>${escapeHtml(material.title || material.filename)}</strong><small>${escapeHtml(material.filename)} · ${formatBytes(material.file_size)} · ${material.parse_status === 'queued' ? '待解析' : material.parse_status}</small></div><div class="task-actions"><button class="danger" data-material-delete="${material.id}">删除</button></div></article>`).join('') : '<p class="empty">该课程还没有资料。</p>';

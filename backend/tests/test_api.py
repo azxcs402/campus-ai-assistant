@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime, timedelta, timezone
 
 
 def auth_headers(client):
@@ -47,6 +48,22 @@ def test_auth_course_task_and_stats(client):
     overview = client.get("/api/v1/stats/overview", headers=headers)
     assert overview.status_code == 200
     assert overview.json()["completion_rate"] == 1.0
+
+    upcoming = client.get("/api/v1/tasks/upcoming", headers=headers)
+    assert upcoming.status_code == 200
+    assert upcoming.json() == []
+
+
+def test_upcoming_tasks_returns_due_items(client):
+    headers = auth_headers(client)
+    course = client.post("/api/v1/courses", headers=headers, json={"name": "提醒测试课"})
+    course_id = course.json()["id"]
+    due_at = (datetime.now(timezone.utc) + timedelta(days=1)).isoformat()
+    task = client.post("/api/v1/tasks", headers=headers, json={"title": "明日任务", "course_id": course_id, "due_at": due_at})
+    assert task.status_code == 201
+    upcoming = client.get("/api/v1/tasks/upcoming", headers=headers)
+    assert upcoming.status_code == 200
+    assert upcoming.json()[0]["title"] == "明日任务"
 
 
 def test_conversation_persists_messages(client):
