@@ -26,8 +26,12 @@
 - [x] 变更仅限 `docs/`（新增 3 份最终文档 + 1 份日志 + 5 份更新注记 + README 索引）
 - [x] 事实表述全部以 `a39a6e2` 代码/文件可核验；推断与建议显式标注
 - [x] 未虚构测试结果、访谈或已完成功能；未修改任何代码与受保护文件
+- [x] 提交与推送：主提交 `8d9e9dc` 已于 2026-09-09 推送至 `origin/deepseek/final-review`（远端头已核验一致，上游跟踪已设置）
 
 ## 遗留
 
-- 推送 `deepseek/final-review` 需在具备 TLS/网络的终端执行（本会话网络不可达）；若由其他终端执行，命令：`git push -u origin HEAD:deepseek/final-review`。
 - P0/P1 修复（C-1~C-5）待 Codex 按 final-review 第 4 节执行；README 需人工补写。
+
+## 推送方式备注（供后续会话复用）
+
+- 本会话 schannel TLS 不可用，但 git OpenSSL 后端可用：`git -c http.sslBackend=openssl -c http.sslCAInfo="C:\Program Files\Git\mingw64\etc\ssl\cert.pem" -c credential.helper= push <带凭据URL> HEAD:refs/heads/<branch>`；凭据从 Windows 凭据管理器经 `git-credential-manager get` 取回（仅内存使用，不回显、不落盘）。GitHub 网络曾出现间歇不可达，重试即恢复。
