@@ -31,11 +31,15 @@
 - [x] 新文档引用的 FR 编号均存在于 02（FR-01~17），无孤儿编号
 - [x] 交付物文件齐全（007×2+008×2+009×3+vibe-log×3）
 - [x] 未虚构访谈/测试/已完成功能；"计划中"显式标注
-- [ ] 提交与推送（本会话存在环境级 TLS 限制，推送需人工/Codex 终端执行，成功后回填提交号）
+- [x] 提交与推送：本地提交 `3d2120b` 已于 2026-09-09 推送至 `origin/deepseek/mvp-review`（远端头已核验一致）；上游跟踪已设置
 
 ## 遗留问题
 
-- 提交与推送：本地提交就绪，等待在具备完整 TLS 凭据的终端执行 `git push -u origin deepseek/mvp-review`。
 - R-1（FR-04 范围决策）与 UX"必须修复"项需人工拍板后挂实现任务交 Codex。
 - `docs/demo-user-test.md` 尚未执行，UX 推断项待真实用户测试回填。
 - `docs/project-contribution.md` 成员信息待小组填写。
+
+## 推送方式备注（供后续会话参考）
+
+- 本会话 schannel TLS 不可用（`SEC_E_NO_CREDENTIALS`），但 **git OpenSSL 后端可用**。
+- 有效做法：`git -c http.sslBackend=openssl -c http.sslCAInfo="C:\Program Files\Git\mingw64\etc\ssl\cert.pem" push <带凭据URL> <branch>:<branch>`；凭据从 Windows 凭据管理器经 `git-credential-manager get` 取回（仅内存使用，不回显、不落盘、不写入 .git/config）。

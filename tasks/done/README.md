@@ -17,4 +17,4 @@
 | [TASK-008-rag-plan.md](TASK-008-rag-plan.md) | 两天 RAG 方案与演示数据 | 2026-09-09 | `docs/rag-plan.md`、`docs/rag-demo-dataset.md` |
 | [TASK-009-demo-materials.md](TASK-009-demo-materials.md) | 课程答辩与演示材料 | 2026-09-09 | `docs/presentation-outline.md`、`docs/demo-script.md`、`docs/project-contribution.md` |
 
-> 注：上述任务完成于 `deepseek/mvp-review` 分支；提交号见 `docs/vibe-log/` 整合日志（推送完成后可在任务文件补记）。
+> 注：上述任务完成于 `deepseek/mvp-review` 分支；主提交 `3d2120b` 已于 2026-09-09 推送至 `origin/deepseek/mvp-review`（详见 `docs/vibe-log/2026-09-09-task-007-009-review-round.md`）。
