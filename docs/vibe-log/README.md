@@ -17,3 +17,4 @@
 - 2026-09-09：[TASK-008 RAG 方案与演示数据](2026-09-09-task-008-rag-plan.md)
 - 2026-09-09：[TASK-009 课程答辩与演示材料](2026-09-09-task-009-demo-materials.md)
 - 2026-09-09：[TASK-007~009 整合与提交](2026-09-09-task-007-009-review-round.md)
+- 2026-09-09：[Final Review 最终评审与交付文档](2026-09-09-final-review.md)

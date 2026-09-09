@@ -1,5 +1,7 @@
 # RAG 方案（两天内可实现）——课程资料问答
 
+> 🔄 **final-review 更新注记（2026-09-09）**：本文"现状基线"写于更早代码（无资料功能）。此后提交 `a39a6e2` 已实现资料**上传/列表/删除**（`materials` 表、`POST /materials`、`GET /courses/{id}/materials`、`DELETE /materials/{id}`；`parse_status` 恒为 `queued`）。因此本文 Day1"自带最小上传能力"的前提**已部分满足**：实现时**直接复用现有上传接口与 `materials` 表**，只需补解析/切分/向量/检索、`GET /materials/{id}/parse-status` 与前端来源展示。是否在周五前实现及方案取舍见 [final-rag-decision.md](final-rag-decision.md)。
+
 > 文档编号：rag-plan ｜ 状态：方案（计划，未实现）｜ 责任任务：`tasks/doing/TASK-008-rag-plan.md`
 > 关联需求：FR-12/13/14/15（编号与 [02-requirements.md](02-requirements.md) 一致）；用户价值：Jobs J4、痛点 P4、收益 G4（见 [01-design-thinking.md](01-design-thinking.md) 2.3–2.5）
 > 关联文档：[03-architecture.md](03-architecture.md) 3.4/4.3/4.4/5/6/附录A、[04-api-spec.md](04-api-spec.md) 2.4/2.5/3.3/3.5、[05-database.md](05-database.md) 2.5/2.6、[06-test-plan.md](06-test-plan.md) 4

@@ -1,5 +1,7 @@
 # MVP 用户体验与设计思维符合度审查报告（TASK-007）
 
+> 🔄 **final-review 更新注记（2026-09-09）**：本报告基于**更早代码快照（无课程资料功能）**。此后 `origin/codex/integration` 新增提交 `a39a6e2`，已实现课程资料**上传/列表/删除**（`materials` 表 + `GET /courses/{id}/materials`、`POST /materials`、`DELETE /materials/{id}` + 前端资料区）。因此本报告 **R-1（FR-04 未实现、基础版门槛③不达标）已失效——当前基础版 8 项门槛已全部满足**；其余 UX 问题（UX-01~05、UX-09 等）在最新代码中仍成立。权威的现状与问题清单见 [final-review.md](final-review.md)。
+
 > 交付物：TASK-007（docs/mvp-review.md）｜ 状态：完成静态审查，结论待用户测试（[demo-user-test.md](demo-user-test.md)）验证
 > 审查执行：2026-09-09，DeepSeek Harness（子代理，静态阅读，未运行服务）
 > 审查对象：当前工作区代码快照（backend/ 与 frontend/，分支 `deepseek/mvp-review`，基于 Codex MVP）
