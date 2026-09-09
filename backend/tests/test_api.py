@@ -71,3 +71,25 @@ def test_conversation_persists_messages(client):
 def test_protected_endpoint_requires_login(client):
     response = client.get("/api/v1/tasks")
     assert response.status_code == 401
+
+
+def test_material_upload_list_and_delete(client):
+    headers = auth_headers(client)
+    course = client.post("/api/v1/courses", headers=headers, json={"name": "资料测试课"})
+    course_id = course.json()["id"]
+    upload = client.post(
+        "/api/v1/materials",
+        headers=headers,
+        data={"course_id": str(course_id), "title": "第一章课件"},
+        files={"file": ("chapter-1.txt", b"system design notes", "text/plain")},
+    )
+    assert upload.status_code == 201
+    material_id = upload.json()["id"]
+    assert upload.json()["parse_status"] == "queued"
+
+    materials = client.get(f"/api/v1/courses/{course_id}/materials", headers=headers)
+    assert materials.status_code == 200
+    assert materials.json()[0]["filename"] == "chapter-1.txt"
+
+    deleted = client.delete(f"/api/v1/materials/{material_id}", headers=headers)
+    assert deleted.status_code == 204

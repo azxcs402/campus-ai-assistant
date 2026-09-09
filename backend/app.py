@@ -8,11 +8,12 @@ import sqlite3
 import json
 import urllib.error
 import urllib.request
+import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
-from fastapi import Depends, FastAPI, HTTPException, Query, status
+from fastapi import Depends, FastAPI, File, Form, HTTPException, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field
@@ -21,6 +22,8 @@ from pydantic import BaseModel, Field
 ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = ROOT / "data"
 DATA_DIR.mkdir(exist_ok=True)
+UPLOAD_DIR = DATA_DIR / "uploads"
+UPLOAD_DIR.mkdir(exist_ok=True)
 DB_PATH = Path(os.getenv("DATABASE_PATH", str(DATA_DIR / "app.db")))
 TOKEN_SECRET = os.getenv("TOKEN_SECRET", "dev-only-change-me")
 
@@ -81,6 +84,19 @@ def init_db() -> None:
                 status TEXT NOT NULL DEFAULT 'todo',
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS materials (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                course_id INTEGER NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+                uploaded_by INTEGER NOT NULL REFERENCES users(id),
+                filename TEXT NOT NULL,
+                title TEXT,
+                file_path TEXT NOT NULL,
+                file_type TEXT NOT NULL,
+                file_size INTEGER NOT NULL,
+                parse_status TEXT NOT NULL DEFAULT 'queued',
+                parse_error TEXT,
+                created_at TEXT NOT NULL
             );
             CREATE TABLE IF NOT EXISTS conversations (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -300,6 +316,65 @@ def delete_task(task_id: int, user: sqlite3.Row = Depends(current_user)) -> None
         cursor = connection.execute("DELETE FROM tasks WHERE id = ? AND created_by = ?", (task_id, user["id"]))
         if cursor.rowcount == 0:
             raise HTTPException(status_code=404, detail="任务不存在")
+
+
+ALLOWED_MATERIAL_EXTENSIONS = {".pdf", ".ppt", ".pptx", ".doc", ".docx", ".txt", ".md"}
+MAX_MATERIAL_SIZE = 20 * 1024 * 1024
+
+
+@app.get("/api/v1/courses/{course_id}/materials")
+def list_materials(course_id: int, user: sqlite3.Row = Depends(current_user)) -> list[dict[str, Any]]:
+    with db() as connection:
+        require_course_member(connection, course_id, user["id"])
+        rows = connection.execute(
+            "SELECT id, course_id, filename, title, file_type, file_size, parse_status, parse_error, created_at FROM materials WHERE course_id = ? ORDER BY created_at DESC",
+            (course_id,),
+        ).fetchall()
+    return [dict(row) for row in rows]
+
+
+@app.post("/api/v1/materials", status_code=201)
+async def upload_material(
+    file: UploadFile = File(...),
+    course_id: int = Form(...),
+    title: str | None = Form(default=None),
+    user: sqlite3.Row = Depends(current_user),
+) -> dict[str, Any]:
+    original_name = Path(file.filename or "").name
+    extension = Path(original_name).suffix.lower()
+    if not original_name or extension not in ALLOWED_MATERIAL_EXTENSIONS:
+        raise HTTPException(status_code=400, detail="仅支持 PDF、PPT、PPTX、DOC、DOCX、TXT 或 MD 文件")
+
+    content = await file.read(MAX_MATERIAL_SIZE + 1)
+    if len(content) > MAX_MATERIAL_SIZE:
+        raise HTTPException(status_code=400, detail="文件大小不能超过 20MB")
+
+    with db() as connection:
+        require_course_member(connection, course_id, user["id"])
+        stored_name = f"{uuid.uuid4().hex}{extension}"
+        target_dir = UPLOAD_DIR / str(course_id)
+        target_dir.mkdir(parents=True, exist_ok=True)
+        target = target_dir / stored_name
+        target.write_bytes(content)
+        cursor = connection.execute(
+            """INSERT INTO materials(course_id, uploaded_by, filename, title, file_path, file_type, file_size, parse_status, created_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, 'queued', ?)""",
+            (course_id, user["id"], original_name, title or original_name, str(target.relative_to(DATA_DIR)), extension[1:], len(content), now()),
+        )
+        row = connection.execute("SELECT id, course_id, filename, title, file_type, file_size, parse_status, parse_error, created_at FROM materials WHERE id = ?", (cursor.lastrowid,)).fetchone()
+    return dict(row)
+
+
+@app.delete("/api/v1/materials/{material_id}", status_code=204)
+def delete_material(material_id: int, user: sqlite3.Row = Depends(current_user)) -> None:
+    with db() as connection:
+        row = connection.execute("SELECT * FROM materials WHERE id = ? AND uploaded_by = ?", (material_id, user["id"])).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="资料不存在")
+        target = DATA_DIR / row["file_path"]
+        if target.is_file():
+            target.unlink()
+        connection.execute("DELETE FROM materials WHERE id = ?", (material_id,))
 
 
 @app.post("/api/v1/conversations", status_code=201)
