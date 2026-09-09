@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>校园智能学习助手</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div><p class="eyebrow">CAMPUS AI ASSISTANT</p><h1>把学习任务，变成清晰的下一步</h1></div>
+      <div id="userBox" class="user-box"></div>
+    </header>
+
+    <section id="authView" class="auth-card">
+      <p class="eyebrow">WELCOME BACK</p><h2>进入你的学习空间</h2>
+      <form id="authForm">
+        <input id="account" placeholder="账号 / 学号" required>
+        <input id="password" type="password" placeholder="密码（至少 6 位）" required>
+        <input id="nickname" placeholder="昵称（注册时填写）">
+        <div class="form-actions"><button type="submit">登录</button><button type="button" class="secondary" id="registerBtn">注册</button></div>
+      </form><p id="authError" class="error"></p>
+    </section>
+
+    <section id="appView" class="app-view hidden">
+      <div class="stats-grid"><div><span>全部任务</span><strong id="totalStat">0</strong></div><div><span>已完成</span><strong id="doneStat">0</strong></div><div><span>完成率</span><strong id="rateStat">0%</strong></div></div>
+      <div class="workspace">
+        <section class="panel"><div class="panel-head"><h2>学习任务</h2><button id="refreshBtn" class="secondary">刷新</button></div>
+          <form id="taskForm" class="task-form"><input id="taskTitle" placeholder="例如：完成系统设计课程报告" required><select id="courseSelect"></select><input id="dueAt" type="date"><select id="priority"><option value="high">高优先级</option><option value="medium" selected>中优先级</option><option value="low">低优先级</option></select><button>添加任务</button></form>
+          <div id="taskList" class="task-list"></div>
+        </section>
+        <section class="panel assistant"><div class="panel-head"><h2>AI 学习助手</h2><span class="status-dot">演示模式可用</span></div><div id="chatLog" class="chat-log"></div><form id="chatForm" class="chat-form"><input id="chatInput" placeholder="问问课程、任务或学习计划..." required><button>发送</button></form></section>
+      </div>
+    </section>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
