@@ -64,7 +64,7 @@ function renderUpcoming(tasks) {
   $('upcomingList').innerHTML = tasks.length ? `<div class="upcoming-title">即将截止</div>${tasks.slice(0, 3).map(task => `<div class="upcoming-item ${task.urgent ? 'urgent' : ''}"><span>${escapeHtml(task.title)}</span><small>${task.remaining_hours <= 0 ? '已逾期' : `${task.remaining_hours} 小时内`}</small></div>`).join('')}` : '';
 }
 function renderMaterials(materials) {
-  $('materialList').innerHTML = materials.length ? materials.map(material => `<article class="task"><div><strong>${escapeHtml(material.title || material.filename)}</strong><small>${escapeHtml(material.filename)} · ${formatBytes(material.file_size)} · ${material.parse_status === 'queued' ? '待解析' : material.parse_status}</small></div><div class="task-actions"><button class="danger" data-material-delete="${material.id}">删除</button></div></article>`).join('') : '<p class="empty">该课程还没有资料。</p>';
+  $('materialList').innerHTML = materials.length ? materials.map(material => `<article class="task"><div><strong>${escapeHtml(material.title || material.filename)}</strong><small>${escapeHtml(material.filename)} · ${formatBytes(material.file_size)} · ${material.parse_status === 'queued' ? '已保存（解析待接入）' : escapeHtml(material.parse_status)}</small></div><div class="task-actions"><button class="danger" data-material-delete="${material.id}">删除</button></div></article>`).join('') : '<p class="empty">该课程还没有资料。</p>';
   document.querySelectorAll('[data-material-delete]').forEach(button => button.onclick = async () => {
     if (!confirm('确认删除这份资料吗？')) return;
     try { await withBusy(button, () => request(`/materials/${button.dataset.materialDelete}`, { method: 'DELETE' })); await loadData(); }
@@ -86,6 +86,11 @@ $('registerBtn').onclick = async () => { try { if (!$('nickname').value) throw n
   } catch (error) { alert(error.message); }
  };
 $('refreshBtn').onclick = loadData;
+$('materialCourseSelect').onchange = async () => {
+  try { await loadMaterials($('materialCourseSelect').value); }
+  catch (error) { alert(error.message); }
+};
+async function loadMaterials(courseId) { renderMaterials(await request(`/courses/${courseId}/materials`)); }
  $('materialForm').onsubmit = async (event) => {
   event.preventDefault();
   const button = event.submitter; const file = $('materialFile').files[0];
