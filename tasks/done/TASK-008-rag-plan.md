@@ -2,11 +2,18 @@
 
 ## Status
 
-ready
+done
 
 ## Owner
 
 DeepSeek Harness
+
+## Execution Note
+
+- 开始执行：2026-09-09（DeepSeek Harness 子代理，并行批次一）
+- 目标交付：`docs/rag-plan.md`、`docs/rag-demo-dataset.md`、`docs/vibe-log/2026-09-09-task-008-rag-plan.md`
+- 完成：2026-09-09；主 Agent 静态复核通过（交付文件齐全、Markdown 链接/FR 编号一致、未引入依赖、未改代码；D-1~D-7 依赖决策留待实现前人工确认）
+- 交付物：`docs/rag-plan.md`（两天最小实现方案，对应 FR-12~15）、`docs/rag-demo-dataset.md`（合成语料 + 5 个演示问答）、vibe-log 日志
 
 ## Objective
 

@@ -2,11 +2,18 @@
 
 ## Status
 
-ready
+done
 
 ## Owner
 
 DeepSeek Harness
+
+## Execution Note
+
+- 开始执行：2026-09-09（DeepSeek Harness 子代理，并行批次一）
+- 目标交付：`docs/mvp-review.md`、`docs/demo-user-test.md`、`docs/vibe-log/2026-09-09-task-007-mvp-ux-review.md`
+- 完成：2026-09-09；主 Agent 静态复核通过（交付文件齐全、Markdown 链接/FR 编号一致、变更仅限 docs/ 与 tasks/、无虚构结果）
+- 交付物：`docs/mvp-review.md`（10 条 UX 问题 + 1 条范围红线）、`docs/demo-user-test.md`（待执行的现场用户测试方案）、vibe-log 日志
 
 ## Objective
 
