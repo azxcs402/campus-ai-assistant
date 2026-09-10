@@ -215,8 +215,24 @@ class TaskPatch(BaseModel):
         return normalize_due_at(value)
 
 
+class ProviderConfig(BaseModel):
+    name: str = Field(min_length=1, max_length=80)
+    base_url: str = Field(min_length=1, max_length=300)
+    model: str = Field(min_length=1, max_length=120)
+    api_key: str = Field(min_length=1, max_length=500)
+
+    @field_validator("base_url")
+    @classmethod
+    def validate_base_url(cls, value: str) -> str:
+        normalized = value.strip().rstrip("/")
+        if not normalized.startswith(("http://", "https://")):
+            raise ValueError("Base URL 必须以 http:// 或 https:// 开头")
+        return normalized
+
+
 class MessageIn(BaseModel):
     content: str = Field(min_length=1, max_length=4000)
+    provider: ProviderConfig | None = None
 
 
 @app.get("/api/v1/health")
@@ -440,13 +456,13 @@ def list_conversations(user: sqlite3.Row = Depends(current_user)) -> list[dict[s
         return [dict(row) for row in connection.execute("SELECT * FROM conversations WHERE user_id = ? ORDER BY updated_at DESC", (user["id"],)).fetchall()]
 
 
-def assistant_reply(content: str) -> str:
-    api_key = os.getenv("LLM_API_KEY")
+def assistant_reply(content: str, provider: ProviderConfig | None = None) -> str:
+    api_key = provider.api_key if provider else os.getenv("LLM_API_KEY")
     if not api_key:
         return f"演示模式：我已收到你的问题“{content}”。配置 LLM_API_KEY 后可接入真实模型。你也可以先把它整理为一个学习任务。"
 
-    base_url = os.getenv("LLM_BASE_URL", "https://api.deepseek.com/v1").rstrip("/")
-    model = os.getenv("LLM_MODEL", "deepseek-chat")
+    base_url = provider.base_url if provider else os.getenv("LLM_BASE_URL", "https://api.deepseek.com/v1").rstrip("/")
+    model = provider.model if provider else os.getenv("LLM_MODEL", "deepseek-chat")
     request_body = json.dumps({
         "model": model,
         "messages": [
@@ -477,7 +493,7 @@ def send_message(conversation_id: int, payload: MessageIn, user: sqlite3.Row = D
             raise HTTPException(status_code=404, detail="会话不存在")
         timestamp = now()
         connection.execute("INSERT INTO messages(conversation_id, role, content, created_at) VALUES (?, 'user', ?, ?)", (conversation_id, payload.content, timestamp))
-        reply = assistant_reply(payload.content)
+        reply = assistant_reply(payload.content, payload.provider)
         cursor = connection.execute("INSERT INTO messages(conversation_id, role, content, created_at) VALUES (?, 'assistant', ?, ?)", (conversation_id, reply, now()))
         connection.execute("UPDATE conversations SET updated_at = ? WHERE id = ?", (now(), conversation_id))
         row = connection.execute("SELECT * FROM messages WHERE id = ?", (cursor.lastrowid,)).fetchone()
