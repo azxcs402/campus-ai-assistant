@@ -24,10 +24,11 @@
     </section>
 
     <section id="appView" class="app-view hidden">
-      <div class="stats-grid"><div><span>全部任务</span><strong id="totalStat">0</strong></div><div><span>已完成</span><strong id="doneStat">0</strong></div><div><span>完成率</span><strong id="rateStat">0%</strong></div></div>
+      <div class="stats-grid"><div><span>全部任务</span><strong id="totalStat">0</strong></div><div><span>已完成</span><strong id="doneStat">0</strong></div><div><span>已逾期</span><strong id="overdueStat">0</strong></div><div><span>完成率</span><strong id="rateStat">0%</strong></div></div>
       <div class="workspace">
         <section class="panel"><div class="panel-head"><h2>学习任务</h2><button id="refreshBtn" class="secondary">刷新</button></div>
-          <form id="taskForm" class="task-form"><input id="taskTitle" placeholder="例如：完成系统设计课程报告" required><select id="courseSelect"></select><button type="button" class="secondary" id="createCourseBtn">新建课程</button><input id="dueAt" type="date"><select id="priority"><option value="high">高优先级</option><option value="medium" selected>中优先级</option><option value="low">低优先级</option></select><button>添加任务</button></form>
+          <form id="taskForm" class="task-form"><input id="taskTitle" placeholder="例如：完成系统设计课程报告" required><select id="courseSelect"></select><button type="button" class="secondary" id="createCourseBtn">新建课程</button><button type="button" class="secondary" id="manageCourseBtn">课程详情</button><input id="dueAt" type="date"><select id="priority"><option value="high">高优先级</option><option value="medium" selected>中优先级</option><option value="low">低优先级</option></select><input id="taskNote" placeholder="任务备注（可选）"><button id="taskSubmitBtn">添加任务</button><button type="button" class="secondary hidden" id="taskCancelBtn">取消编辑</button></form>
+          <form id="courseForm" class="course-form hidden"><strong>课程详情</strong><input id="courseName" placeholder="课程名称" required><input id="courseSemester" placeholder="学期（可选）"><div class="form-actions"><button id="courseSaveBtn">保存课程</button><button type="button" class="danger" id="courseDeleteBtn">删除课程</button><button type="button" class="secondary" id="courseCancelBtn">关闭</button></div><p id="courseMeta" class="hint"></p></form>
           <div id="upcomingList" class="upcoming-list"></div>
           <div id="taskList" class="task-list"></div>
         </section>
@@ -39,6 +40,11 @@
           <div class="provider-controls"><select id="providerSelect" aria-label="选择 AI API"></select><button type="button" class="secondary" id="providerManageBtn">管理 API</button></div>
           <form id="providerForm" class="provider-form hidden"><input id="providerName" placeholder="配置名称，例如：DeepSeek 主账号" required><input id="providerBaseUrl" type="url" placeholder="Base URL，例如：https://api.deepseek.com/v1" required><input id="providerModel" placeholder="模型名称，例如：deepseek-chat" required><input id="providerApiKey" type="password" placeholder="API Key（仅保存在当前浏览器）" required><div class="provider-actions"><button type="submit">保存 API</button><button type="button" class="secondary" id="providerCancelBtn">取消</button><button type="button" class="danger" id="providerDeleteBtn">删除当前 API</button></div><p class="hint">API Key 只保存在当前浏览器 localStorage。不要在共享电脑上保存，也不要提交到 Git。</p></form>
           <div id="chatLog" class="chat-log"></div><form id="chatForm" class="chat-form"><input id="chatInput" placeholder="问问课程、任务或学习计划..." required><button>发送</button></form></section>
+        <section class="panel analytics"><div class="panel-head"><h2>学习统计</h2><span class="status-dot">服务器口径</span></div>
+          <form id="statsForm" class="stats-filter"><select id="statsCourse"><option value="">全部课程</option></select><input id="statsFrom" type="date" aria-label="开始日期"><input id="statsTo" type="date" aria-label="结束日期"><button>应用筛选</button><button type="button" class="secondary" id="statsResetBtn">重置</button></form>
+          <div id="courseChart" class="course-chart"></div>
+        </section>
+        <section id="adminPanel" class="panel admin-panel hidden"><div class="panel-head"><h2>用户与角色</h2><span class="status-dot">仅管理员</span></div><div id="userList" class="user-list"></div></section>
       </div>
     </section>
   </main>

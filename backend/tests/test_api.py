@@ -98,7 +98,7 @@ def test_task_due_at_rejects_invalid_datetime_and_normalizes_date(client):
         "/api/v1/tasks", headers=headers, json={"title": "日期任务", "course_id": course_id, "due_at": "2026-09-12"}
     )
     assert valid.status_code == 201
-    assert valid.json()["due_at"] == "2026-09-12T00:00:00+00:00"
+    assert valid.json()["due_at"] == "2026-09-12T15:59:59.999999+00:00"
 
     updated = client.patch(f"/api/v1/tasks/{valid.json()['id']}", headers=headers, json={"due_at": "2026-09-13T08:00:00"})
     assert updated.status_code == 200
