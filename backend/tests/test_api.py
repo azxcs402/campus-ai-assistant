@@ -164,6 +164,34 @@ def test_ai_api_key_error_timeout_and_network_failure_are_safe(monkeypatch):
         assert "AI 服务暂时不可用" in app_module.assistant_reply("测试问题", provider)
 
 
+def test_custom_provider_is_forwarded_to_compatible_api(monkeypatch):
+    captured = {}
+
+    class FakeResponse:
+        def __enter__(self): return self
+        def __exit__(self, *args): return False
+        def read(self): return '{"choices":[{"message":{"content":"本地模拟回复"}}]}'.encode("utf-8")
+
+    def fake_urlopen(request, timeout):
+        captured["url"] = request.full_url
+        captured["authorization"] = request.get_header("Authorization")
+        captured["body"] = request.data.decode("utf-8")
+        captured["timeout"] = timeout
+        return FakeResponse()
+
+    monkeypatch.setattr(app_module.urllib.request, "urlopen", fake_urlopen)
+    provider = app_module.ProviderConfig(
+        name="本地测试 API", base_url="http://127.0.0.1:9999/v1/", model="test-model", api_key="fake-key"
+    )
+    reply = app_module.assistant_reply("测试转发", provider)
+
+    assert reply == "本地模拟回复"
+    assert captured["url"] == "http://127.0.0.1:9999/v1/chat/completions"
+    assert captured["authorization"] == "Bearer fake-key"
+    assert '"model": "test-model"' in captured["body"]
+    assert captured["timeout"] == 25
+
+
 def test_protected_endpoint_requires_login(client):
     response = client.get("/api/v1/tasks")
     assert response.status_code == 401
