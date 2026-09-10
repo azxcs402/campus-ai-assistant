@@ -7,6 +7,7 @@
 
 - 项目名称：**基于 AI 与 RAG 的校园智能学习助手系统**
 - 代码代号：`campus-ai-assistant`（仓库名沿用）
+- 公开项目链接：https://github.com/azxcs402/campus-ai-assistant
 - 课程背景：《系统设计与实践》。课程要求项目从真实用户需求出发，依次经过用户调研、问题定义、方案构思、原型验证，再进入系统设计与工程实现。
 - 技术参考：[EchoBot](https://github.com/KdaiP/EchoBot)（AI 对话、意图识别、Agent 工具调用、会话记录、定时任务、资料检索）。EchoBot 仅作为技术思路参考，**不得复制其代码**；本项目必须拥有独立的校园学习场景、独立的需求分析与系统设计。
 

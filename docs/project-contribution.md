@@ -60,7 +60,7 @@
 | 后端自动化测试 | 已完成 | `backend/tests/test_api.py`，当前结果为 `15 passed` |
 | API 文档 | 已完成 | `http://127.0.0.1:8000/docs` |
 | 功能截图 | 已完成 | 登录、主页、课程、任务、资料、API、AI 对话、Swagger、GitHub 共 10 张 |
-| GitHub 交付 | 已完成 | `main` 分支已合并 Codex API 功能和 DeepSeek 最终评审文档 |
+| GitHub 交付 | 已完成 | 公开仓库：https://github.com/azxcs402/campus-ai-assistant；`main` 分支已合并 Codex API 功能和 DeepSeek 最终评审文档 |
 | 真实用户调研 | 暂不执行 | 不产生访谈结论，不虚构用户证据 |
 | 原型验证 | 暂不执行 | `TASK-006` 保持待办状态 |
 | 个人职业发展规划 | 暂不实现 | 不在本次项目提交物中声称已完成 |
