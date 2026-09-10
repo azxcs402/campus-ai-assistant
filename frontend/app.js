@@ -33,13 +33,17 @@ function showApp(user) {
   loadData();
 }
 
-async function loadData() {
+async function loadData(selectedCourseId = null) {
   try {
     const [courses, tasks, upcoming, overview, conversations] = await Promise.all([request('/courses'), request('/tasks'), request('/tasks/upcoming'), request('/stats/overview'), request('/conversations')]);
     if (!courses.length) await request('/courses', { method: 'POST', body: JSON.stringify({ name: '系统设计与实践', semester: '2026 秋' }) });
     const freshCourses = courses.length ? courses : await request('/courses');
     $('courseSelect').innerHTML = freshCourses.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
     $('materialCourseSelect').innerHTML = freshCourses.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+    if (selectedCourseId) {
+      $('courseSelect').value = String(selectedCourseId);
+      $('materialCourseSelect').value = String(selectedCourseId);
+    }
     renderTasks(tasks); renderUpcoming(upcoming); renderStats(overview);
     renderMaterials(await request(`/courses/${freshCourses[0].id}/materials`));
     if (conversations.length) conversationId = conversations[0].id; else conversationId = (await request('/conversations', { method: 'POST' })).id;
@@ -86,6 +90,21 @@ $('registerBtn').onclick = async () => { try { if (!$('nickname').value) throw n
   } catch (error) { alert(error.message); }
  };
 $('refreshBtn').onclick = loadData;
+$('createCourseBtn').onclick = async () => {
+  const name = prompt('请输入课程名称');
+  if (name === null) return;
+  const trimmedName = name.trim();
+  if (!trimmedName) { alert('课程名称不能为空'); return; }
+  const semester = prompt('请输入学期（可选，例如：2026 秋）');
+  try {
+    const course = await withBusy($('createCourseBtn'), () => request('/courses', {
+      method: 'POST',
+      body: JSON.stringify({ name: trimmedName, semester: semester?.trim() || null }),
+    }));
+    await loadData(course.id);
+    alert(`课程“${course.name}”创建成功`);
+  } catch (error) { alert(error.message); }
+};
 $('materialCourseSelect').onchange = async () => {
   try { await loadMaterials($('materialCourseSelect').value); }
   catch (error) { alert(error.message); }
