@@ -13,3 +13,21 @@ button.secondary { color:var(--ink); background:#e8ece3; } button.danger { color
 .status-dot { color:#557565; font:12px Arial, sans-serif; } .status-dot::before { content:' '; display:inline-block; width:7px; height:7px; margin-right:6px; border-radius:50%; background:#70a985; } .chat-log { min-height:350px; max-height:460px; overflow:auto; padding:8px 0; } .bubble { max-width:86%; margin:9px 0; padding:12px 14px; border-radius:16px; font:14px/1.5 Arial, sans-serif; } .bubble.user { margin-left:auto; color:#fff; background:var(--accent); border-bottom-right-radius:4px; } .bubble.assistant { background:#e8eee6; border-bottom-left-radius:4px; } .chat-form { display:flex; grid-template-columns:1fr auto; } .chat-form input { flex:1; } .chat-form button { flex-shrink:0; }
 @media (max-width:800px) { .topbar { display:block; } .user-box { margin-top:18px; } .workspace { grid-template-columns:1fr; } .task-form { grid-template-columns:1fr 1fr; } .task-form button { grid-column:span 2; } }
 @media (max-width:520px) { .shell { padding:28px 14px 48px; } .stats-grid { gap:7px; } .stats-grid > div { padding:14px 10px; } .stats-grid strong { font-size:26px; } .panel { padding:17px; } .task { align-items:flex-start; flex-direction:column; } .task-actions { width:100%; } }
+
+/* Keep the task form readable instead of compressing every control into one row. */
+.task-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: 10px;
+}
+.task-form > * { min-width: 0; width: 100%; box-sizing: border-box; }
+.task-form #taskTitle,
+.task-form > button[type="submit"] { grid-column: 1 / -1; }
+
+@media (max-width:800px) {
+  .task-form { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width:520px) {
+  .task-form { grid-template-columns: 1fr; }
+  .task-form > * { grid-column: 1 / -1 !important; }
+}
