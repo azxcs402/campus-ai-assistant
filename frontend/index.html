@@ -27,7 +27,7 @@
       <div class="stats-grid"><div><span>全部任务</span><strong id="totalStat">0</strong></div><div><span>已完成</span><strong id="doneStat">0</strong></div><div><span>完成率</span><strong id="rateStat">0%</strong></div></div>
       <div class="workspace">
         <section class="panel"><div class="panel-head"><h2>学习任务</h2><button id="refreshBtn" class="secondary">刷新</button></div>
-          <form id="taskForm" class="task-form"><input id="taskTitle" placeholder="例如：完成系统设计课程报告" required><select id="courseSelect"></select><input id="dueAt" type="date"><select id="priority"><option value="high">高优先级</option><option value="medium" selected>中优先级</option><option value="low">低优先级</option></select><button>添加任务</button></form>
+          <form id="taskForm" class="task-form"><input id="taskTitle" placeholder="例如：完成系统设计课程报告" required><select id="courseSelect"></select><button type="button" class="secondary" id="createCourseBtn">新建课程</button><input id="dueAt" type="date"><select id="priority"><option value="high">高优先级</option><option value="medium" selected>中优先级</option><option value="low">低优先级</option></select><button>添加任务</button></form>
           <div id="upcomingList" class="upcoming-list"></div>
           <div id="taskList" class="task-list"></div>
         </section>
