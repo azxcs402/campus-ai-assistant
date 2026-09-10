@@ -19,3 +19,4 @@
 - 2026-09-09：[TASK-007~009 整合与提交](2026-09-09-task-007-009-review-round.md)
 - 2026-09-09：[Final Review 最终评审与交付文档](2026-09-09-final-review.md)
 - 2026-09-10：[Codex 标准功能扩展实现](2026-09-10-standard-feature-expansion.md)
+- 2026-09-10：[标准功能最终验收（文档复核）](2026-09-10-standard-feature-final-review.md)
