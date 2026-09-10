@@ -2,11 +2,18 @@
 
 ## Status
 
-ready
+done
 
 ## Owner
 
 DeepSeek Harness
+
+## Execution Note
+
+- 开始执行：2026-09-09（DeepSeek Harness 子代理，并行批次一）
+- 目标交付：`docs/demo-script.md`、`docs/presentation-outline.md`、`docs/project-contribution.md`、`docs/vibe-log/2026-09-09-task-009-demo-materials.md`
+- 完成：2026-09-09；主 Agent 静态复核通过（交付文件齐全、Markdown 链接/FR 编号一致、计划中功能均显式标注、无虚构结果；贡献表待小组填写）
+- 交付物：`docs/presentation-outline.md`、`docs/demo-script.md`（5 分钟演示）、`docs/project-contribution.md`（成员贡献模板）、vibe-log 日志
 
 ## Objective
 
