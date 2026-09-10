@@ -66,6 +66,27 @@ def test_upcoming_tasks_returns_due_items(client):
     assert upcoming.json()[0]["title"] == "明日任务"
 
 
+def test_task_due_at_rejects_invalid_datetime_and_normalizes_date(client):
+    headers = auth_headers(client)
+    course = client.post("/api/v1/courses", headers=headers, json={"name": "日期校验课"})
+    course_id = course.json()["id"]
+
+    invalid = client.post(
+        "/api/v1/tasks", headers=headers, json={"title": "非法日期", "course_id": course_id, "due_at": "abc"}
+    )
+    assert invalid.status_code == 422
+
+    valid = client.post(
+        "/api/v1/tasks", headers=headers, json={"title": "日期任务", "course_id": course_id, "due_at": "2026-09-12"}
+    )
+    assert valid.status_code == 201
+    assert valid.json()["due_at"] == "2026-09-12T00:00:00+00:00"
+
+    updated = client.patch(f"/api/v1/tasks/{valid.json()['id']}", headers=headers, json={"due_at": "2026-09-13T08:00:00"})
+    assert updated.status_code == 200
+    assert updated.json()["due_at"] == "2026-09-13T08:00:00+00:00"
+
+
 def test_conversation_persists_messages(client):
     headers = auth_headers(client)
     conversation = client.post("/api/v1/conversations", headers=headers)
