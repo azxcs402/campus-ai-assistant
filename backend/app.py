@@ -678,6 +678,10 @@ def normalize_stats_date(value: str | None, end_of_day: bool = False) -> str | N
 
 
 def stats_where(user: sqlite3.Row, course_id: int | None, date_from: str | None, date_to: str | None) -> tuple[str, list[Any]]:
+    normalized_from = normalize_stats_date(date_from) if date_from else None
+    normalized_to = normalize_stats_date(date_to, end_of_day=True) if date_to else None
+    if normalized_from and normalized_to and normalized_from > normalized_to:
+        raise HTTPException(status_code=422, detail="开始日期不能晚于结束日期")
     clauses = ["1 = 1"]
     params: list[Any] = []
     if user["role"] != "admin":
@@ -686,12 +690,12 @@ def stats_where(user: sqlite3.Row, course_id: int | None, date_from: str | None,
     if course_id is not None:
         clauses.append("t.course_id = ?")
         params.append(course_id)
-    if date_from:
+    if normalized_from:
         clauses.append("t.due_at >= ?")
-        params.append(normalize_stats_date(date_from))
-    if date_to:
+        params.append(normalized_from)
+    if normalized_to:
         clauses.append("t.due_at <= ?")
-        params.append(normalize_stats_date(date_to, end_of_day=True))
+        params.append(normalized_to)
     return " AND ".join(clauses), params
 
 

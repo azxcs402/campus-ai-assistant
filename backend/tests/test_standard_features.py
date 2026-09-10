@@ -110,6 +110,9 @@ def test_course_date_and_overdue_statistics(client):
     assert filtered.status_code == 200
     assert filtered.json()["total"] == 0
     assert client.get("/api/v1/stats/overview?from=not-a-date", headers=headers).status_code == 422
+    reversed_range = client.get("/api/v1/stats/overview?from=2026-09-12&to=2026-09-10", headers=headers)
+    assert reversed_range.status_code == 422
+    assert reversed_range.json()["detail"] == "开始日期不能晚于结束日期"
 
 
 def test_conversation_is_private_but_admin_can_review(client, monkeypatch):
