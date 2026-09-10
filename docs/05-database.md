@@ -34,7 +34,7 @@ material_chunks.material_id → materials
 | account | string | UQ, not null | 学号/账号，登录标识 |
 | password_hash | string | not null | 密码哈希，禁止明文（NFR-03） |
 | nickname | string | not null | 昵称 |
-| role | enum | not null, default `student` | `student` / `teacher` / `admin`（FR-11） |
+| role | enum | not null, default `student` | `student` / `teacher` / `admin`（FR-11）。**【实现状态 2026-09-10】** 已实现：注册时账号等于环境变量 `ADMIN_ACCOUNT` 即为 `admin`（启动时也会把该账号升级为 admin）；角色可经 `PATCH /users/{id}/role` 由管理员调整（`student/teacher/admin`），**管理员不能修改自己的角色**（400） |
 | created_at / updated_at | datetime | not null | |
 
 ### 2.2 courses 课程
@@ -44,7 +44,7 @@ material_chunks.material_id → materials
 | id | int | PK | |
 | name | string | not null | 课程名 |
 | semester | string | nullable | 如 2026-秋 |
-| invite_code | string | UQ, nullable | 加入课程的邀请码（FR-03 join） |
+| invite_code | string | UQ, nullable | 加入课程的邀请码（FR-03 join）— **【计划中，未实现】**（当前表无此列） |
 | owner_id | int | FK→users | 创建者 |
 | created_at / updated_at | datetime | not null | |
 
@@ -67,13 +67,13 @@ material_chunks.material_id → materials
 | title | string | not null | 任务名（≤ 200 字符，FR-08 超长约束） |
 | course_id | int | FK→courses, not null | 归属课程（FR-02） |
 | created_by | int | FK→users, not null | 创建者（可见性边界） |
-| parent_task_id | int | FK→tasks, nullable | 父任务（AI 拆解出的子任务用，FR-16） |
+| parent_task_id | int | FK→tasks, nullable | 父任务（AI 拆解出的子任务用，FR-16）— **【计划中，未实现】** |
 | status | enum | not null, default `todo` | `todo` / `doing` / `done` |
 | priority | enum | default `medium` | `low` / `medium` / `high` |
-| due_at | datetime | nullable | 截止时间（可空则视为无截止，提醒逻辑跳过） |
-| note | text | nullable | 备注/任务要求 |
-| estimate_hours | float | nullable | 预估时长（拆解子任务可带，FR-16） |
-| completed_at | datetime | nullable | 完成时间（统计口径用，FR-10） |
+| due_at | datetime | nullable | 截止时间（可空则视为无截止）。**【实现 2026-09-10】** 采用 ISO 8601 存 UTC；**纯日期输入按校园时区（UTC+8）当日 23:59:59.999999 归一化**；非法值 422 |
+| note | text | nullable | 备注/任务要求（已实现，前端可录入） |
+| estimate_hours | float | nullable | 预估时长（拆解子任务可带，FR-16）— **【计划中，未实现】** |
+| completed_at | datetime | nullable | 完成时间。**【实现 2026-09-10】** 已加列（启动时幂等 `ALTER TABLE` 迁移）：`PATCH` 状态转 `done` 时写入、转回时清空；**当前未参与统计聚合**（统计过滤基于 `due_at`） |
 | created_at / updated_at | datetime | not null | |
 | IDX |  |  | (created_by, status)、(course_id, due_at) |
 
@@ -96,7 +96,9 @@ material_chunks.material_id → materials
 | created_at / updated_at | datetime | not null | |
 | IDX |  |  | (course_id, created_at) |
 
-### 2.6 material_chunks 资料切分单元（RAG 基础，FR-12/13）
+### 2.6 material_chunks 资料切分单元（RAG 基础，FR-12/13）— **【计划中，未实现】**
+
+> **实现状态（2026-09-10）**：该表**尚未创建**；RAG（解析/切分/向量/检索）未实现，资料 `parse_status` 恒为 `queued`。下表为设计方案，保留供 RAG 立项时使用。
 
 | 字段 | 类型 | 约束 | 说明 |
 | --- | --- | --- | --- |
@@ -128,11 +130,11 @@ material_chunks.material_id → materials
 | --- | --- | --- | --- |
 | id | int/bigint | PK | |
 | conversation_id | int | FK→conversations, not null | |
-| role | enum | not null | `user` / `assistant` / `system`（可选） |
-| type | enum | not null | `chat` 普通对话 / `rag` 课程资料问答（FR-14） |
-| content | text | not null | 消息文本 |
-| course_scope_id | int | FK→courses, nullable | RAG 检索范围（type=rag 时） |
-| citations | json | nullable | 引用来源数组（material_id/filename/location/snippet，FR-15） |
+| role | enum | not null | `user` / `assistant` / `system`（可选）；**已实现**（仅 `user`/`assistant`） |
+| type | enum | not null | `chat` 普通对话 / `rag` 课程资料问答（FR-14）— **【计划中，未实现】**（当前表无此列） |
+| content | text | not null | 消息文本（**已实现**） |
+| course_scope_id | int | FK→courses, nullable | RAG 检索范围（type=rag 时）— **【计划中，未实现】** |
+| citations | json | nullable | 引用来源数组（material_id/filename/location/snippet，FR-15）— **【计划中，未实现】** |
 | created_at | datetime | not null | |
 | IDX |  |  | (conversation_id, created_at) |
 
@@ -143,6 +145,13 @@ material_chunks.material_id → materials
 - 统计（FR-10/17）不设冗余业务表，由统计聚合模块按需计算（`stats` 查询模型，见 [03-architecture.md](03-architecture.md) 3.2）；若后期数据量大再考虑物化，本期不做。
 - 提醒（FR-09）：基础版不做独立提醒任务表，以 `tasks.due_at` 查询生成"即将截止"；如需主动推送（外部渠道）再引入提醒记录表（可选范围，不影响基础交付）。
 
-## 4. 待 TASK-004 决策项（写回本文件）
+## 4. 决策项与实现现状（2026-09-10 更新，基线 `codex/standard-feature-expansion` @ `222fa02`）
 
-1. 数据库选型与连接管理；2. 迁移与种子数据方案（含角色初始账号/邀请码生成）；3. 时间存储与比较口径；4. 删除与级联策略、软删除取舍；5. 向量承载方式（DB 衍生表 vs 专用向量库）与索引同步事务边界；6. 字段长度/枚举的最终约束与建表 SQL/ORM 模型。
+| # | 决策项 | 现状 |
+| --- | --- | --- |
+| 1 | 数据库选型与连接管理 | **已定**：SQLite + 原生 `sqlite3`，启动时 `init_db()` 建表 + 幂等 `ALTER TABLE`（如 `tasks.completed_at`） |
+| 2 | 迁移与种子数据 | 启动自迁移（`CREATE TABLE IF NOT EXISTS` / 列存在性检查）；管理员由环境变量 `ADMIN_ACCOUNT` 指定；邀请码生成**未实现** |
+| 3 | 时间存储与比较口径 | **已定**：统一存 UTC ISO 8601；纯日期输入与统计 `from/to` 按**校园时区 UTC+8** 取当日边界后转 UTC；日期筛选非法值 422 |
+| 4 | 删除与级联策略 | **课程**：非空（有任务或资料）返回 409 **阻止删除**；**任务**：仅创建者/管理员可删；**资料**：上传者/课程所有者/管理员可删（其他 404）。软删除未采用 |
+| 5 | 向量承载方式 | **未定（计划中）**：`material_chunks` 未建表，RAG 未实现 |
+| 6 | 字段长度/枚举/建表 SQL | 已随代码实现（见各表"实现状态"标注）；`parent_task_id`/`estimate_hours`/`invite_code`/`material_chunks`/`messages.type` 等仍为**计划中** |
