@@ -106,6 +106,21 @@ def test_conversation_persists_messages(client):
     assert [item["role"] for item in messages.json()] == ["user", "assistant"]
 
 
+def test_message_provider_rejects_non_http_base_url(client):
+    headers = auth_headers(client)
+    conversation = client.post("/api/v1/conversations", headers=headers)
+    conversation_id = conversation.json()["id"]
+    response = client.post(
+        f"/api/v1/conversations/{conversation_id}/messages",
+        headers=headers,
+        json={
+            "content": "测试 API",
+            "provider": {"name": "错误配置", "base_url": "ftp://example.com", "model": "demo", "api_key": "not-a-real-key"},
+        },
+    )
+    assert response.status_code == 422
+
+
 def test_protected_endpoint_requires_login(client):
     response = client.get("/api/v1/tasks")
     assert response.status_code == 401

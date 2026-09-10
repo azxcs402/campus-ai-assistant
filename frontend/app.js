@@ -1,8 +1,23 @@
 const API = 'http://127.0.0.1:8000/api/v1';
 let token = localStorage.getItem('campus_token');
 let conversationId = null;
+const PROVIDERS_KEY = 'campus_api_providers';
+let providers = loadProviders();
+let activeProviderId = localStorage.getItem('campus_active_provider') || '';
 
 const $ = (id) => document.getElementById(id);
+function loadProviders() { try { return JSON.parse(localStorage.getItem(PROVIDERS_KEY) || '[]'); } catch { return []; } }
+function persistProviders() { localStorage.setItem(PROVIDERS_KEY, JSON.stringify(providers)); }
+function activeProvider() { return providers.find(provider => provider.id === activeProviderId) || null; }
+function renderProviders() {
+  const select = $('providerSelect');
+  if (!select) return;
+  select.innerHTML = `<option value="">环境变量 / 演示模式</option>${providers.map(provider => `<option value="${escapeHtml(provider.id)}">${escapeHtml(provider.name)}</option>`).join('')}`;
+  select.value = activeProviderId;
+  if (select.value !== activeProviderId) activeProviderId = '';
+  $('aiStatus').textContent = activeProvider() ? `当前：${activeProvider().name}` : '演示模式可用';
+}
+function clearProviderForm() { $('providerForm').reset(); $('providerBaseUrl').value = 'https://api.deepseek.com/v1'; $('providerModel').value = 'deepseek-chat'; }
 const request = async (path, options = {}) => {
   const headers = { ...(options.body instanceof FormData ? {} : { 'Content-Type': 'application/json' }), ...(options.headers || {}) };
   if (token) headers.Authorization = `Bearer ${token}`;
@@ -30,6 +45,7 @@ function showApp(user) {
   $('authView').classList.add('hidden'); $('appView').classList.remove('hidden');
   $('userBox').innerHTML = `<span>${user.nickname}</span><button class="link-button" id="logoutBtn">退出</button>`;
   $('logoutBtn').onclick = () => { localStorage.removeItem('campus_token'); location.reload(); };
+  renderProviders();
   loadData();
 }
 
@@ -90,6 +106,37 @@ $('registerBtn').onclick = async () => { try { if (!$('nickname').value) throw n
   } catch (error) { alert(error.message); }
  };
 $('refreshBtn').onclick = loadData;
+$('providerSelect').onchange = (event) => {
+  activeProviderId = event.target.value;
+  localStorage.setItem('campus_active_provider', activeProviderId);
+  renderProviders();
+};
+$('providerManageBtn').onclick = () => {
+  const form = $('providerForm');
+  form.classList.toggle('hidden');
+  if (!form.classList.contains('hidden')) {
+    const current = activeProvider();
+    if (current) { $('providerName').value = current.name; $('providerBaseUrl').value = current.base_url; $('providerModel').value = current.model; $('providerApiKey').value = current.api_key; }
+    else clearProviderForm();
+  }
+};
+$('providerCancelBtn').onclick = () => { $('providerForm').classList.add('hidden'); clearProviderForm(); };
+$('providerDeleteBtn').onclick = () => {
+  if (!activeProvider()) { alert('当前未选择自定义 API'); return; }
+  if (!confirm(`确认删除“${activeProvider().name}”吗？`)) return;
+  providers = providers.filter(provider => provider.id !== activeProviderId);
+  activeProviderId = ''; persistProviders(); localStorage.setItem('campus_active_provider', ''); renderProviders(); $('providerForm').classList.add('hidden'); clearProviderForm();
+};
+$('providerForm').onsubmit = (event) => {
+  event.preventDefault();
+  const name = $('providerName').value.trim(); const baseUrl = $('providerBaseUrl').value.trim().replace(/\/$/, ''); const model = $('providerModel').value.trim(); const apiKey = $('providerApiKey').value.trim();
+  if (!name || !model || !apiKey) { alert('请完整填写 API 名称、模型名称和 API Key'); return; }
+  if (!/^https?:\/\//i.test(baseUrl)) { alert('Base URL 必须以 http:// 或 https:// 开头'); return; }
+  const provider = { id: activeProviderId || `provider-${Date.now()}`, name, base_url: baseUrl, model, api_key: apiKey };
+  const index = providers.findIndex(item => item.id === provider.id);
+  if (index >= 0) providers[index] = provider; else providers.push(provider);
+  activeProviderId = provider.id; persistProviders(); localStorage.setItem('campus_active_provider', activeProviderId); renderProviders(); $('providerForm').classList.add('hidden'); clearProviderForm();
+};
 $('createCourseBtn').onclick = async () => {
   const name = prompt('请输入课程名称');
   if (name === null) return;
@@ -125,10 +172,11 @@ async function loadMaterials(courseId) { renderMaterials(await request(`/courses
   if (!content || !conversationId) return;
   input.value = ''; $('chatLog').insertAdjacentHTML('beforeend', `<div class="bubble user">${escapeHtml(content)}</div>`);
   try {
-    const reply = await withBusy(button, () => request(`/conversations/${conversationId}/messages`, { method: 'POST', body: JSON.stringify({ content }) }));
+    const reply = await withBusy(button, () => request(`/conversations/${conversationId}/messages`, { method: 'POST', body: JSON.stringify({ content, provider: activeProvider() } ) }));
     $('chatLog').insertAdjacentHTML('beforeend', `<div class="bubble assistant">${escapeHtml(reply.content)}</div>`);
   } catch (error) { $('chatLog').insertAdjacentHTML('beforeend', `<div class="bubble assistant error">${escapeHtml(error.message)}</div>`); }
   $('chatLog').scrollTop = $('chatLog').scrollHeight;
  };
 
 if (token) request('/auth/me').then(showApp).catch(() => { localStorage.removeItem('campus_token'); });
+renderProviders();
